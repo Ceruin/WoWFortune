@@ -1,33 +1,60 @@
 $(document).ready(function() {
-    function replaceWithSynonyms(text) {
-        return text.split(' ').map(word => synonyms[word] || word).join(' ');
+    // Load Google Translate API
+    google.load("elements", "1", {
+        packages: "translate"
+    });
+
+    function translate(text, targetLanguage) {
+        return new Promise((resolve, reject) => {
+            google.elements.transliterate.translate(text, 'en', targetLanguage, function(result) {
+                if (result.error) {
+                    reject(result.error);
+                } else {
+                    resolve(result.translation);
+                }
+            });
+        });
     }
 
-    function generateCopyPasta(userInput) {
+    async function fetchTranslations(words) {
+        const translations = {};
+        for (const word of words) {
+            try {
+                const [englishTranslation, japaneseTranslation] = await Promise.all([
+                    translate(word, 'en'),
+                    translate(word, 'ja')
+                ]);
+                translations[word] = { english: englishTranslation, japanese: japaneseTranslation };
+            } catch (error) {
+                console.error(`Error translating '${word}':`, error);
+            }
+        }
+        return translations;
+    }
+
+    function generateCopyPasta(userInput, translations) {
         const words = userInput.split(/\s+/); // Tokenize user input
         let copyPasta = "";
-        
+
         // Iterate through user input words
         words.forEach(word => {
-            // Use user input if it matches a category
-            if (vocabulary.hasOwnProperty(word)) {
-                const options = vocabulary[word];
-                const choice = options[Math.floor(Math.random() * options.length)];
-                copyPasta += replaceWithSynonyms(choice) + " ";
+            if (translations.hasOwnProperty(word)) {
+                const { english, japanese } = translations[word];
+                copyPasta += `${english} ${japanese} `;
             } else {
-                // Otherwise, select a random word from the predefined categories
-                const randomCategory = Object.values(vocabulary)[Math.floor(Math.random() * Object.keys(vocabulary).length)];
-                const randomWord = randomCategory[Math.floor(Math.random() * randomCategory.length)];
-                copyPasta += replaceWithSynonyms(randomWord) + " ";
+                // If translation not found, use original word
+                copyPasta += `${word} ${word} `;
             }
         });
 
         return copyPasta.trim();
     }
 
-    $('#generate').click(function() {
+    $('#generate').click(async function() {
         const userInput = $('#inputText').val();
-        const copyPasta = generateCopyPasta(userInput);
+        const words = userInput.split(/\s+/);
+        const translations = await fetchTranslations(words);
+        const copyPasta = generateCopyPasta(userInput, translations);
         $('#fortune').html(copyPasta);
     });
 });
