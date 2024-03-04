@@ -1,21 +1,4 @@
 $(document).ready(function() {
-    let templates = [];
-    let vocabulary = {};
-    let synonyms = {};
-
-    // Load data from JSON files
-    function loadData() {
-        $.getJSON(templates, function(data) {
-            templates = data;
-        });
-        $.getJSON(vocabulary, function(data) {
-            vocabulary = data;
-        });
-        $.getJSON(synonyms, function(data) {
-            synonyms = data;
-        });
-    }
-
     function replaceWithSynonyms(text) {
         return text.split(' ').map(word => synonyms[word] || word).join(' ');
     }
@@ -34,6 +17,4 @@ $(document).ready(function() {
         const copyPasta = generateCopyPasta();
         $('#fortune').html(copyPasta);
     });
-
-    loadData(); // Load the data when the document is ready
 });
