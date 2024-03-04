@@ -5,15 +5,7 @@ $(document).ready(function() {
 
     // Load data from JSON files
     function loadData() {
-        $.getJSON(templates, function(data) {
-            templates = data;
-        });
-        $.getJSON(vocabulary, function(data) {
-            vocabulary = data;
-        });
-        $.getJSON(synonyms, function(data) {
-            synonyms = data;
-        });
+
     }
 
     function replaceWithSynonyms(text) {
