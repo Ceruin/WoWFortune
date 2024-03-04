@@ -3,18 +3,35 @@ $(document).ready(function() {
         return text.split(' ').map(word => synonyms[word] || word).join(' ');
     }
 
-    function generateCopyPasta() {
-        const template = templates[Math.floor(Math.random() * templates.length)];
-        const copyPasta = template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-            const options = vocabulary[key];
-            const choice = options[Math.floor(Math.random() * options.length)];
-            return replaceWithSynonyms(choice); // Replace with synonyms for variety
+    function generateCopyPasta(userInput) {
+        const words = userInput.split(/\s+/); // Tokenize user input
+        let copyPasta = "";
+
+        words.forEach(word => {
+            // Find the closest word from predefined categories
+            let closestWord = "";
+            let minDistance = Infinity;
+
+            Object.values(vocabulary).forEach(category => {
+                category.forEach(item => {
+                    const [wordInCategory, japaneseWord] = item.split(' ');
+                    const distance = Math.abs(word.localeCompare(wordInCategory, 'en', { sensitivity: 'base' }));
+                    if (distance < minDistance) {
+                        closestWord = japaneseWord ? japaneseWord : wordInCategory;
+                        minDistance = distance;
+                    }
+                });
+            });
+
+            copyPasta += closestWord + " ";
         });
-        return copyPasta;
+
+        return copyPasta.trim();
     }
 
     $('#generate').click(function() {
-        const copyPasta = generateCopyPasta();
+        const userInput = $('#inputText').val();
+        const copyPasta = generateCopyPasta(userInput);
         $('#fortune').html(copyPasta);
     });
 });
